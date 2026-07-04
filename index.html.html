@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sage — Spruce Salon AI Assistant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --cream: #F7F3EA;
+    --forest: #2F4B3C;
+    --forest-dark: #203528;
+    --gold: #C9A24B;
+    --charcoal: #2B2B28;
+    --line: #E3DCC9;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Work Sans', sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 900px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  @media (max-width: 720px) {
+    .stage { grid-template-columns: 1fr; }
+  }
+
+  .intro h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.05;
+    margin: 0 0 12px;
+    color: var(--forest-dark);
+  }
+
+  .intro .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .intro p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #56564E;
+    max-width: 34ch;
+  }
+
+  .intro .try-list {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .try-chip {
+    align-self: flex-start;
+    background: white;
+    border: 1px solid var(--line);
+    color: var(--forest-dark);
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+    transition: all 0.15s ease;
+  }
+  .try-chip:hover { border-color: var(--gold); background: #FBF8F0; }
+
+  .widget {
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 20px 50px -20px rgba(47,75,60,0.35);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 560px;
+    border: 1px solid var(--line);
+  }
+
+  .widget-header {
+    background: var(--forest);
+    color: var(--cream);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--forest-dark);
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .widget-header .name {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .widget-header .status {
+    font-size: 11px;
+    opacity: 0.75;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #7FD99A;
+    display: inline-block;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #FCFAF5;
+  }
+
+  .msg {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .msg.bot {
+    background: white;
+    border: 1px solid var(--line);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    color: var(--charcoal);
+  }
+
+  .msg.user {
+    background: var(--forest);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg a { color: var(--gold); font-weight: 600; }
+  .msg.bot a { color: var(--forest); }
+
+  .typing {
+    align-self: flex-start;
+    display: flex;
+    gap: 4px;
+    padding: 12px 14px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
+  }
+  .typing span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #B7B29E;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    padding: 14px;
+    border-top: 1px solid var(--line);
+    background: white;
+  }
+
+  .input-row input {
+    flex: 1;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 11px 16px;
+    font-size: 14px;
+    font-family: 'Work Sans', sans-serif;
+    outline: none;
+    background: var(--cream);
+  }
+  .input-row input:focus { border-color: var(--gold); }
+
+  .input-row button {
+    background: var(--forest);
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+  }
+  .input-row button:hover { background: var(--forest-dark); }
+  .input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .footnote {
+    text-align: center;
+    font-size: 11px;
+    color: #948F7C;
+    padding: 8px 14px 14px;
+    background: white;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="intro">
+    <span class="eyebrow">Live Demo</span>
+    <h1>Meet Sage.<br>Spruce Salon's after-hours assistant.</h1>
+    <p>A working AI concierge built to answer real client questions and route bookings — even when the front desk can't pick up the phone.</p>
+    <div class="try-list">
+      <button class="try-chip" data-msg="What are your hours on Saturday?">"What are your hours on Saturday?"</button>
+      <button class="try-chip" data-msg="Do you do balayage?">"Do you do balayage?"</button>
+      <button class="try-chip" data-msg="I have a bald spot, is that normal?">"I have a bald spot, is that normal?"</button>
+    </div>
+  </div>
+
+  <div class="widget">
+    <div class="widget-header">
+      <div class="avatar">S</div>
+      <div>
+        <div class="name">Sage</div>
+        <div class="status"><span class="dot"></span>Spruce Salon Assistant</div>
+      </div>
+    </div>
+    <div class="messages" id="messages">
+      <div class="msg bot">Hi! I'm Sage 🌿 Ask me about hours, services, or booking — I'm here even after the front desk closes.</div>
+    </div>
+    <div class="input-row">
+      <input type="text" id="userInput" placeholder="Type a question..." />
+      <button id="sendBtn" aria-label="Send">→</button>
+    </div>
+    <div class="footnote">Conceptual demo built for portfolio purposes — not an official Spruce Salon product.</div>
+  </div>
+</div>
+
+<script>
+  const WEBHOOK_URL = "https://launchpixel.app.n8n.cloud/webhook/8e6b0b2a-a9e9-4c2f-b321-2731b6e9df9d";
+
+  const messagesEl = document.getElementById('messages');
+  const input = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.innerHTML = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'typing';
+    div.id = 'typingIndicator';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  function linkify(text) {
+    return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+  }
+
+  // Fallback local responses used if no live webhook is connected yet,
+  // or if the live call fails for any reason (kept honest for demo reliability).
+  const fallbackResponses = [
+    { keys: ['hour', 'open', 'saturday', 'sunday', 'monday'], reply: "We're open Tue 9–3, Wed–Fri 10–6:30, and Sat 9–3. Closed Sun & Mon. Want to book a time online? → https://phorest.com/book/salons/sprucesalon3" },
+    { keys: ['balayage', 'color', 'service', 'haircut'], reply: "Yes! We offer full color services including balayage and corrections, plus cuts, treatments, and bridal styling. Pricing is confirmed at booking based on your stylist and service." },
+    { keys: ['bald', 'scalp', 'medical', 'diagnos'], reply: "I'm not able to assess that — every scalp is unique. I'd recommend booking a consultation with one of our licensed stylists so they can take a real look. → https://phorest.com/book/salons/sprucesalon3" },
+    { keys: ['price', 'cost', 'how much'], reply: "Pricing depends on your stylist and the service — our team will confirm the exact cost when you book. Want the booking link?" },
+    { keys: ['book', 'appointment', 'schedule'], reply: "You can book right here → https://phorest.com/book/salons/sprucesalon3 — or I can flag your request for our front desk if you'd rather. Want me to do that?" }
+  ];
+
+  function getFallbackReply(msg) {
+    const lower = msg.toLowerCase();
+    for (const r of fallbackResponses) {
+      if (r.keys.some(k => lower.includes(k))) return r.reply;
+    }
+    return "Thanks for reaching out! I've noted your question — our team will follow up shortly. In the meantime, you can book directly here → https://phorest.com/book/salons/sprucesalon3";
+  }
+
+  async function sendMessage(text) {
+    if (!text.trim()) return;
+    addMessage(text, 'user');
+    input.value = '';
+    sendBtn.disabled = true;
+    showTyping();
+
+    let reply;
+    try {
+      if (WEBHOOK_URL) {
+        const res = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'Website Visitor',
+            contact: 'N/A',
+            service: 'N/A',
+            preferred_time: 'N/A',
+            message: text
+          })
+        });
+        const data = await res.json();
+        reply = data.output || data.message || getFallbackReply(text);
+      } else {
+        reply = getFallbackReply(text);
+      }
+    } catch (e) {
+      reply = getFallbackReply(text);
+    }
+
+    await new Promise(r => setTimeout(r, 500));
+    hideTyping();
+    addMessage(linkify(reply), 'bot');
+    sendBtn.disabled = false;
+  }
+
+  sendBtn.addEventListener('click', () => sendMessage(input.value));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(input.value); });
+
+  document.querySelectorAll('.try-chip').forEach(chip => {
+    chip.addEventListener('click', () => sendMessage(chip.dataset.msg));
+  });
+</script>
+
+</body>
+</html>
